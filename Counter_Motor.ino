@@ -4,24 +4,46 @@
 #define echo2 11
 int led1 = 12; // Kuning
 int led2 = 13; // Merah
+int led3 = 7; // Hijau
 
 int objectCount = 0;
 bool objectDetected1 = false;
 bool objectDetected2 = false;
+bool currentDetection1 = false;
+bool currentDetection2 = false;
+
+
+void updateLEDs(int count) {
+  if (count >= 2) {
+    digitalWrite(led2, HIGH); // Nyalakan LED2
+    digitalWrite(led1, LOW);  // Matikan LED1
+    digitalWrite(led3, LOW);
+  } else if (count == 1) {
+    digitalWrite(led1, HIGH); // Nyalakan LED1 jika count == 4
+    digitalWrite(led2, LOW);  // Matikan LED2
+    digitalWrite(led3,LOW);
+  } else {
+    digitalWrite(led1, LOW);  // Matikan LED1 jika count kurang dari 4
+    digitalWrite(led2, LOW);  // Matikan LED2 jika count kurang dari 4
+    digitalWrite(led3, HIGH);
+  }
+}
 
 void setup() {
-Serial.begin(9600);
-pinMode(trigpin, OUTPUT);
-pinMode(trig2, OUTPUT);
-pinMode(echo2, INPUT);
-pinMode(echopin, INPUT);
-pinMode(led1, OUTPUT);
-pinMode(led2, OUTPUT);
+  Serial.begin(9600);
+  pinMode(trigpin, OUTPUT);
+  pinMode(trig2, OUTPUT);
+  pinMode(echo2, INPUT);
+  pinMode(echopin, INPUT);
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  pinMode(led3, OUTPUT);
 
-digitalWrite(led1, LOW);
-digitalWrite(led2, LOW);
+  digitalWrite(led1, LOW);
+  digitalWrite(led2, LOW);
+  digitalWrite(led3, LOW);
 
-delay(2000);
+  delay(1000);
 }
 
 void loop() {
@@ -48,28 +70,39 @@ void loop() {
   duration2 = pulseIn(echo2, HIGH);
   distance2 = (duration2 / 2) / 29.1;
 
-  bool currentDetected1 = (distance1 < 20);
-  bool currentDetected2 = (distance2 , 20);
+  bool currentDetected1 = (distance1 < 10);//Diganti nantinya dengan tinggi sesungguhnya
+  bool currentDetected2 = (distance2 < 10);
 
-  if (!objectDetected1 or objectDetected2 && currentDetected1 && currentDetected2 && objectCount < 5) {
-      objectCount++;
-      objectDetected1 = true;
-      objectDetected2 = true;
-    }
+// Penambahan objectCount ketika objek terdeteksi oleh sensor 1
+  if (currentDetected1 && !objectDetected1) {
+    objectCount++;
+    objectDetected1 = true;
+  }
+  
+  // Penambahan objectCount ketika objek terdeteksi oleh sensor 2
+  if (currentDetected2 && !objectDetected2) {
+    objectCount++;
+    objectDetected2 = true;
+  }
 
-  if (!currentDetection1 && !currentDetection2 && (objectDetected1 or objectDetected2)) {
+  // Pengurangan objectCount ketika objek tidak lagi terdeteksi oleh sensor 1
+  if (!currentDetected1 && objectDetected1) {
     if (objectCount > 0) {
       objectCount--;
     }
     objectDetected1 = false;
+  }
+
+  // Pengurangan objectCount ketika objek tidak lagi terdeteksi oleh sensor 2
+  if (!currentDetected2 && objectDetected2) {
+    if (objectCount > 0) {
+      objectCount--;
+    }
     objectDetected2 = false;
   }
-    updateLEDs(objectCount);
 
-    if (objectCount >= 5) {
-      digitalWrite(led2, HIGH);
-    }
-  }
+  updateLEDs(objectCount);
+
 
   Serial.print("Distance1: ");
   Serial.print(distance1);
@@ -78,18 +111,5 @@ void loop() {
   Serial.print(" cm | Object Counted: ");
   Serial.println(objectCount);
 
-  delay(2000);
-}
-
-void updateLEDs(int count) {
-  if (count >= 5) {
-    digitalWrite(led2, HIGH); // Nyalakan LED2
-    digitalWrite(led1, LOW);  // Matikan LED1
-  } else if (count == 4) {
-    digitalWrite(led1, HIGH); // Nyalakan LED1 jika count >= 4
-    digitalWrite(led2, LOW);  // Matikan LED2
-  } else {
-    digitalWrite(led1, LOW);  // Matikan LED1 jika count kurang dari 4
-    digitalWrite(led2, LOW);  // Matikan LED2 jika count kurang dari 4
-  }
+  delay(1000);
 }
